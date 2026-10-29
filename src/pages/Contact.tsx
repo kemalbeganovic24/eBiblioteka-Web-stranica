@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2 } from 'lucide-react';
+import { Send, CheckCircle2, Mail, Phone, MapPin, Clock } from 'lucide-react';
 import { toast } from 'react-toastify';
 
+interface FormData {
+    imePrezime: string;
+    email: string;
+    telefon: string;
+    predmet: string;
+    poruka: string;
+}
+
 export const Contact: React.FC = () => {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<FormData>({
         imePrezime: '',
         email: '',
         telefon: '',
@@ -11,103 +19,112 @@ export const Contact: React.FC = () => {
         poruka: '',
     });
 
-    const [submitted, setSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!formData.imePrezime.trim() || !formData.email.trim() || !formData.poruka.trim()) {
-            toast.error('Molimo popunite sva obavezna polja.');
-            return;
-        }
-
         setIsSubmitting(true);
-        // Simulate accessible feedback loop
-        setTimeout(() => {
+
+        try {
+            const response = await fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    // OVDJE UNESITE VAŠ ACCESS KEY SA WEB3FORMS.COM
+                    access_key: 'f2e2c4ca-8f71-4d08-a36b-822ac548a73d',
+                    subject: `[eBiblioteka Vitez] ${formData.predmet}`,
+                    from_name: formData.imePrezime,
+                    replyto: formData.email,
+                    Ime_i_Prezime: formData.imePrezime,
+                    Email: formData.email,
+                    Telefon: formData.telefon || 'Nije naveden',
+                    Predmet_Upita: formData.predmet,
+                    Poruka: formData.poruka,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                setSubmitted(true);
+                toast.success('Poruka je uspješno poslana!');
+            } else {
+                toast.error('Došlo je do greške pri slanju poruke.');
+            }
+        } catch (error) {
+            console.error('Slanje poruke nije uspjelo:', error);
+            toast.error('Mrežna greška. Provjerite internet konekciju.');
+        } finally {
             setIsSubmitting(false);
-            setSubmitted(true);
-            toast.success('Vaš upit je zabilježen u sistemu biblioteke!');
-        }, 700);
+        }
     };
 
     return (
-        <div className="min-h-screen bg-[#FDFBF7] py-16">
-            <div className="max-w-6xl mx-auto px-6 sm:px-8">
-                <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-semibold text-emerald-800 uppercase tracking-widest block mb-2">
-            Kontakt i podrška
-          </span>
-                    <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-stone-900">
-                        Javite se biblioteci
+        <div className="min-h-screen bg-[#FDFBF7] py-12">
+            <div className="max-w-7xl mx-auto px-6 sm:px-8">
+                {/* Header */}
+                <div className="mb-10">
+                    <nav className="text-xs text-stone-500 mb-2">
+                        <span>Početna</span> / <span className="text-emerald-800 font-semibold">Kontakt</span>
+                    </nav>
+                    <h1 className="font-serif text-3xl sm:text-4xl font-bold text-stone-900">
+                        Kontaktirajte biblioteku
                     </h1>
-                    <p className="text-stone-600 text-sm mt-2">
-                        Za informacije o posudbi, donaciji knjiga, zavičajnom arhivu ili radu Bošnjačke zajednice kulture u Vitezu.
+                    <p className="text-sm text-stone-600 mt-1">
+                        Imate pitanja o posudbi, istraživanju zavičajne građe ili donaciji knjiga? Javite nam se.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-                    {/* Institutional Information & Working Hours */}
-                    <div className="lg:col-span-5 bg-emerald-950 text-white rounded-2xl p-8 border border-emerald-900 shadow-md space-y-8">
-                        <div>
-                            <h2 className="font-serif text-xl font-bold text-white mb-2">
-                                Bošnjačka zajednica kulture općinsko društvo Vitez
-                            </h2>
-                            <p className="text-xs text-emerald-200/80 leading-relaxed">
-                                Bošnjačka zajednica kulture općinsko društvo Vitez djeluje u cilju unapređenja kulture, tradicije, pismenosti i obrazovanja na području općine Vitez i šire regije.
-                            </p>
-                        </div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    {/* Informacije o društvu */}
+                    <div className="lg:col-span-5 bg-emerald-950 text-white rounded-2xl p-8 shadow-sm space-y-6">
+                        <h2 className="font-serif font-bold text-xl text-amber-300 border-b border-emerald-900 pb-3">
+                            Bošnjačka zajednica kulture
+                        </h2>
+                        <p className="text-xs text-stone-300 leading-relaxed">
+                            Općinsko društvo Vitez – Zavičajna bibliotečka zbirka i arhivska građa.
+                        </p>
 
-                        <div className="space-y-4 text-xs">
+                        <div className="space-y-4 pt-2">
                             <div className="flex items-start gap-3">
                                 <MapPin className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                                <div>
-                                    <strong className="block text-white">Adresa sjedišta</strong>
-                                    <span className="text-emerald-100/80">
-                    Vatrogasni dom - / Prostorije BZK, 72250 Vitez, Bosna i Hercegovina
-                  </span>
+                                <div className="text-xs">
+                                    <p className="font-semibold text-stone-200">Adresa:</p>
+                                    <p className="text-stone-400">Kulturni centar, Vitez 72270, BiH</p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <Mail className="w-5 h-5 text-amber-400 shrink-0" />
-                                <div>
-                                    <strong className="block text-white">Elektronska pošta</strong>
-                                    <span className="text-emerald-100/80">kemalbeganovic77@gmail.com</span>
+                            <div className="flex items-start gap-3">
+                                <Mail className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                                <div className="text-xs">
+                                    <p className="font-semibold text-stone-200">E-mail adresa:</p>
+                                    <p className="text-stone-400">bzkpreporodvitez@gmail.com</p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <Phone className="w-5 h-5 text-amber-400 shrink-0" />
-                                <div>
-                                    <strong className="block text-white">Telefon</strong>
-                                    <span className="text-emerald-100/80">+387 61 533 890</span>
+                            <div className="flex items-start gap-3">
+                                <Phone className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                                <div className="text-xs">
+                                    <p className="font-semibold text-stone-200">Telefon:</p>
+                                    <p className="text-stone-400">+387 (0)30 711 000</p>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="border-t border-emerald-900/80 pt-6">
-                            <h3 className="font-serif font-bold text-sm text-amber-300 mb-2">
-                                Radno vrijeme čitaonice
-                            </h3>
-                            <ul className="text-xs text-emerald-100/80 space-y-1">
-                                <li className="flex justify-between">
-                                    <span>Ponedjeljak – Petak:</span>
-                                    <span className="font-semibold text-white">16:00 – 18:00</span>
-                                </li>
-                                <li className="flex justify-between">
-                                    <span>Subota (arhivski rad):</span>
-                                    <span className="font-semibold text-white">10:00 – 14:00</span>
-                                </li>
-                                <li className="flex justify-between">
-                                    <span>Nedjelja i državni praznici:</span>
-                                    <span className="text-amber-400/80">Zatvoreno</span>
-                                </li>
-                            </ul>
+                            <div className="flex items-start gap-3">
+                                <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                                <div className="text-xs">
+                                    <p className="font-semibold text-stone-200">Radno vrijeme:</p>
+                                    <p className="text-stone-400">Ponedjeljak – Petak: 08:00 – 16:00h</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Form */}
+                    {/* Form Panel */}
                     <div className="lg:col-span-7 bg-white rounded-2xl p-8 border border-stone-200/90 shadow-sm">
                         {submitted ? (
                             <div className="text-center py-12 space-y-4">
